@@ -13,7 +13,7 @@ const port = process.argv[2] || 8082;
   Add environment-specific variables on new lines in the form of NAME=VALUE. For example:
   SALLA_OAUTH_CLIENT_ID=xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
   SALLA_OAUTH_CLIENT_SECRET=xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
-  ......
+  ...... 
 */
 const {
   SALLA_OAUTH_CLIENT_ID,
