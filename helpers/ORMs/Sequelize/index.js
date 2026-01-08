@@ -11,11 +11,11 @@ module.exports = {
     // But for this example, we will just use a local SQLite database.
     // const sequelize = new Sequelize(process.env.DB_CONNECTION_URL);
     const sequelize = new Sequelize({
-      host: process.env.DATABASE_SERVER,
+      host: process.env.DATABASE_SERVER || "db",
       username: process.env.DATABASE_USERNAME,
       password: process.env.DATABASE_PASSWORD,
       database: process.env.DATABASE_NAME,
-      dialect: "mysql",
+      dialect: "postgres",
       logging: true,
     });
 
@@ -37,7 +37,7 @@ module.exports = {
 
     sequelize
       .sync()
-      .then((data) => {})
+      .then((data) => { })
       .catch((err) => {
         console.log("Error in creating and connecting database", err);
       });

@@ -21,6 +21,7 @@ const {
   SALLA_OAUTH_CLIENT_REDIRECT_URI,
   SALLA_WEBHOOK_SECRET,
   SALLA_DATABASE_ORM,
+  SALLA_AUTHORIZATION_MODE,
 } = process.env;
 
 // Import Salla APIs
@@ -46,6 +47,7 @@ const SallaAPI = new SallaAPIFactory({
   clientID: SALLA_OAUTH_CLIENT_ID,
   clientSecret: SALLA_OAUTH_CLIENT_SECRET,
   callbackURL: SALLA_OAUTH_CLIENT_REDIRECT_URI,
+  authorizationMode: SALLA_AUTHORIZATION_MODE || 'easy', // Set to easy by default
 });
 
 // set Listener on auth success

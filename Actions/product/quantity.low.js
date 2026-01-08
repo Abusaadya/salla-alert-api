@@ -28,7 +28,32 @@
  * { key:"val" }
  * @api public
  */
-module.exports = (eventBody, userArgs) => {
-  // your logic here
-  return null;
+const axios = require("axios");
+
+module.exports = async (eventBody, userArgs) => {
+  const { data, merchant } = eventBody;
+  const botToken = process.env.TELEGRAM_BOT_TOKEN;
+  const chatId = process.env.TELEGRAM_CHAT_ID;
+
+  if (!botToken || !chatId) {
+    console.error("Telegram credentials missing in .env");
+    return;
+  }
+
+  const message = `⚠️ *تنبيه نقص كمية*
+📦 المنتج: ${data.name}
+🔢 الكمية الحالية: ${data.quantity}
+🏪 التاجر: ${merchant}
+🔗 رابط المنتج: https://salla.sa/p/${data.id}`;
+
+  try {
+    await axios.post(`https://api.telegram.org/bot${botToken}/sendMessage`, {
+      chat_id: chatId,
+      text: message,
+      parse_mode: "Markdown",
+    });
+    console.log(`Telegram alert sent for product: ${data.name}`);
+  } catch (error) {
+    console.error("Error sending Telegram message:", error.response?.data || error.message);
+  }
 };

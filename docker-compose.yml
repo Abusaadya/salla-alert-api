@@ -1,0 +1,50 @@
+services:
+  salla-app:
+    build: .
+    container_name: salla-app
+    restart: always
+    expose:
+      - "8082"
+    env_file:
+      - .env
+    depends_on:
+      - db
+    volumes:
+      - .:/app
+      - /app/node_modules
+
+  nginx:
+    image: nginx:alpine
+    container_name: salla-nginx
+    restart: always
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./nginx/conf.d:/etc/nginx/conf.d
+      - ./nginx/ssl:/etc/nginx/ssl
+      - /var/www/certbot:/var/www/certbot
+    depends_on:
+      - salla-app
+
+  certbot:
+    image: certbot/certbot
+    container_name: certbot
+    volumes:
+      - ./nginx/ssl:/etc/letsencrypt
+      - /var/www/certbot:/var/www/certbot
+    entrypoint: "/bin/sh -c 'trap exit TERM; while :; do certbot renew; sleep 12h & wait $${!}; done;'"
+
+  db:
+    image: postgres:15-alpine
+    container_name: salla-db
+    restart: always
+    environment:
+      POSTGRES_USER: ${DATABASE_USERNAME:-test}
+      POSTGRES_PASSWORD: ${DATABASE_PASSWORD:-test}
+      POSTGRES_DB: ${DATABASE_NAME:-test}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+volumes:
+  postgres_data:
