@@ -28,6 +28,30 @@ const {
 const SallaAPIFactory = require("@salla.sa/passport-strategy");
 const SallaDatabase = require("./database")(SALLA_DATABASE_ORM || "Sequelize");
 const SallaWebhook = require("@salla.sa/webhooks-actions");
+const { Telegraf } = require('telegraf');
+
+const bot = new Telegraf(process.env.TELEGRAM_BOT_TOKEN);
+bot.start(async (ctx) => {
+  const merchantId = ctx.startPayload;
+  if (!merchantId) {
+    return ctx.reply("أهلاً بك! يرجى استخدام رابط الاشتراك الخاص بمتجرك لتفعيل التنبيهات.\n\nمثال: https://t.me/your_bot?start=MERCHANT_ID");
+  }
+
+  try {
+    await SallaDatabase.connect();
+    const oauth = await SallaDatabase.retrieveOauth({ merchant: merchantId });
+    if (oauth) {
+      await SallaDatabase.updateOauth(merchantId, { telegram_chat_id: ctx.chat.id.toString() });
+      ctx.reply(`✅ تم ربط متجرك (رقم: ${merchantId}) بنجاح! ستصلك تنبيهات نقص الكمية هنا.`);
+    } else {
+      ctx.reply(`⚠️ عذراً، لم نجد سجل لهذا المتجر (رقم: ${merchantId}) في نظامنا. يرجى تثبيت التطبيق أولاً.`);
+    }
+  } catch (error) {
+    console.error("Telegram Link Error:", error);
+    ctx.reply("فشل الربط، يرجى المحاولة لاحقاً.");
+  }
+});
+bot.launch().then(() => console.log("🤖 Telegram Bot is active"));
 
 SallaWebhook.setSecret(SALLA_WEBHOOK_SECRET);
 

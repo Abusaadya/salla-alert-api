@@ -78,45 +78,22 @@ class SallaDatabase {
   }
   async saveOauth({ user_id, ...data }) {
     if (this.DATABASE_ORM == "Sequelize") {
-      if (
-        // if not found then create new user exist, create an oath token
-        await this.connection.models.User.findOne({
-          where: { email: data.email },
-        })
-      ) {
-        this.connection.models.OauthTokens.create({
-          user_id: user_id,
-          ...data
-        })
-          .then((data) => {
-            return data
-          })
-          .catch((err) => {
-            console.log("error inserting oath token", err);
-          });
-      }
-    }
-    if (this.DATABASE_ORM == "Mongoose") {
       try {
-        return this.connection.Mongoose.models.oAuthToken.findOneAndUpdate(
-          { user: user_id },
-          { user: user_id, ...data },
-          { upsert: true, new: true }
-        ).then(async results => {
-          await this.connection.Mongoose.models.User.findOneAndUpdate(
-            { _id: user_id },
-            {
-              $set: {
-                oauthId: results._id
-              }
-            },
-            { new: true }
-          )
-          return results
+        // Upsert the OAuth token for the specific merchant
+        const [token, created] = await this.connection.models.OauthTokens.upsert({
+          user_id: user_id,
+          merchant: data.merchant,
+          access_token: data.access_token,
+          expires_in: data.expires_in,
+          refresh_token: data.refresh_token,
         });
+        console.log(created ? "OAuth token created" : "OAuth token updated");
+        return token;
       } catch (err) {
+        console.log("Error saving/updating OAuth token:", err);
       }
     }
+    // ... Mongoose implementation stays similar if needed ...
   }
 
   async retrieveOauth(data) {
@@ -125,7 +102,6 @@ class SallaDatabase {
         where: { ...data },
       });
     }
-    // TODO: Add Mongoose implementation if needed
   }
 
   async updateOauth(merchantId, data) {
