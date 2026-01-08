@@ -32,11 +32,20 @@ const axios = require("axios");
 
 module.exports = async (eventBody, userArgs) => {
   const { data, merchant } = eventBody;
+  const { SallaDatabase } = userArgs;
   const botToken = process.env.TELEGRAM_BOT_TOKEN;
-  const chatId = process.env.TELEGRAM_CHAT_ID;
 
-  if (!botToken || !chatId) {
-    console.error("Telegram credentials missing in .env");
+  if (!botToken) {
+    console.error("TELEGRAM_BOT_TOKEN missing in .env");
+    return;
+  }
+
+  // Fetch the merchant's telegram_chat_id from the database
+  const oauth = await SallaDatabase.retrieveOauth({ merchant });
+  const chatId = oauth?.telegram_chat_id;
+
+  if (!chatId) {
+    console.log(`No Telegram chat ID found for merchant: ${merchant}. Skipping alert.`);
     return;
   }
 
@@ -52,7 +61,7 @@ module.exports = async (eventBody, userArgs) => {
       text: message,
       parse_mode: "Markdown",
     });
-    console.log(`Telegram alert sent for product: ${data.name}`);
+    console.log(`Telegram alert sent for merchant ${merchant}, product: ${data.name}`);
   } catch (error) {
     console.error("Error sending Telegram message:", error.response?.data || error.message);
   }

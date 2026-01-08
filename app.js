@@ -61,7 +61,7 @@ SallaAPI.onAuth(async (accessToken, refreshToken, expires_in, data) => {
         verified_at: getUnixTimestamp(),
         password: "",
         remember_token: "",
-      }); 
+      });
       await SallaDatabase.saveOauth(
         {
           merchant: data.merchant.id,
@@ -130,8 +130,9 @@ app.use((req, res, next) => SallaAPI.setExpressVerify(req, res, next));
 // POST /webhook
 app.post("/webhook", function (req, res) {
   SallaWebhook.checkActions(req.body, req.headers.authorization, {
-    /* your args to pass to action files or listeners */
+    SallaDatabase,
   });
+  res.sendStatus(200); // Always send 200 to Salla quickly
 });
 
 // GET /oauth/redirect
@@ -158,12 +159,12 @@ app.get(
 // render the index page
 
 app.get("/", async function (req, res) {
-  let userDetails = { 
-    user: req.user, 
-    isLogin: req.user 
+  let userDetails = {
+    user: req.user,
+    isLogin: req.user
   }
-  if (req.user){
-    
+  if (req.user) {
+
     const userFromDB = await SallaDatabase.retrieveUser({ email: req.user.email }, true);
     const accessToken = userFromDB.oauthId.access_token;
 
@@ -171,10 +172,10 @@ app.get("/", async function (req, res) {
 
     // Merge user details with additional information from the API
     userDetails = { ...userDetails, ...userFromAPI };
-     // mind you `req.user` content is almost the same as `user`,
-     // the main purpose of calling  `await SallaAPI.getResourceOwner(access_token) `
-     // is to show how to make calls with the access_toke
-    
+    // mind you `req.user` content is almost the same as `user`,
+    // the main purpose of calling  `await SallaAPI.getResourceOwner(access_token) `
+    // is to show how to make calls with the access_toke
+
   }
   res.render("index.html", userDetails);
 });
@@ -227,13 +228,14 @@ app.get("/customers", ensureAuthenticated, async function (req, res) {
 //   logout from passport
 app.get("/logout", function (req, res) {
   SallaAPI.logout();
-  req.logout(function(err) {
+  req.logout(function (err) {
     if (err) { return next(err); }
     res.redirect("/");
   });
 });
 
-app.listen(port, () => {
+app.listen(port, async () => {
+  await SallaDatabase.connect();
   console.log(`🚀 Server is running on http://localhost:${port}`);
 });
 

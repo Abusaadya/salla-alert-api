@@ -18,6 +18,7 @@ module.exports = (sequelize, DataTypes) => {
       access_token: DataTypes.STRING,
       expires_in: DataTypes.INTEGER,
       refresh_token: DataTypes.STRING,
+      telegram_chat_id: DataTypes.STRING,
     },
     {
       sequelize,
